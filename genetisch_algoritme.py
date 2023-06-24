@@ -172,38 +172,44 @@ def mutatie(individu, mutatiekans):
 
     return gemuteerd_individu
 
-populatie = maak_populatie(populatie_grootte)
+def main():
+    populatie = maak_populatie(populatie_grootte)
 
-for generatie in range(aantal_generaties):
-    aantal_te_selecteren = int(selectie_percentage * populatie_grootte)
-    geselecteerde_individuen = selecteer_individuen(populatie, aantal_te_selecteren)
+    for generatie in range(aantal_generaties):
+        aantal_te_selecteren = int(selectie_percentage * populatie_grootte)
+        geselecteerde_individuen = selecteer_individuen(populatie, aantal_te_selecteren)
 
-    nieuwe_populatie = []
-    for i in range(0, len(geselecteerde_individuen), 2):
-        vader = geselecteerde_individuen[i]
-        moeder = geselecteerde_individuen[i + 1]
-        kind1, kind2 = kruising(vader, moeder)
-        nieuwe_populatie.append(kind1)
-        nieuwe_populatie.append(kind2)
+        nieuwe_populatie = []
+        for i in range(0, len(geselecteerde_individuen), 2):
+            vader = geselecteerde_individuen[i]
+            moeder = geselecteerde_individuen[i + 1]
+            kind1, kind2 = kruising(vader, moeder)
+            nieuwe_populatie.append(kind1)
+            nieuwe_populatie.append(kind2)
 
-    for i in range(len(nieuwe_populatie)):
-        nieuwe_populatie[i] = mutatie(nieuwe_populatie[i], mutatiekans)
+        for i in range(len(nieuwe_populatie)):
+            nieuwe_populatie[i] = mutatie(nieuwe_populatie[i], mutatiekans)
 
-    populatie += nieuwe_populatie
+        populatie += nieuwe_populatie
 
-    fitness_scores = [bereken_fitness(individu) for individu in populatie]
-    print(totaal_fitness(nieuwe_populatie))
-    populatie = [populatie[i] for i in sorted(range(len(fitness_scores)),
-                                              key=lambda k: fitness_scores[k],
-                                              reverse=True)[:populatie_grootte]]
+        fitness_scores = [bereken_fitness(individu) for individu in populatie]
+        print(totaal_fitness(nieuwe_populatie))
+        populatie = [populatie[i] for i in sorted(range(len(fitness_scores)),
+                                                  key=lambda k: fitness_scores[k],
+                                                  reverse=True)[:populatie_grootte]]
 
-beste_individu = max(populatie, key=bereken_fitness)
-beste_fitness = bereken_fitness(beste_individu)
-print(f"Uiteindelijk resultaat: Beste individu = {beste_individu}, Beste fitness = {beste_fitness}")
+    beste_individu = max(populatie, key=bereken_fitness)
+    beste_fitness = bereken_fitness(beste_individu)
+    print(f"Uiteindelijk resultaat: Beste individu = {beste_individu}, Beste fitness = {beste_fitness}")
 
-def print_rooster(individu):
-    for werknemer, dagen in individu.items():
-        print(werknemer + ": " + ", ".join(str(dag) for dag in dagen))
+    def print_rooster(individu):
+        for werknemer, dagen in individu.items():
+            print(werknemer + ": " + ", ".join(str(dag) for dag in dagen))
 
-print("\nNieuw rooster voor het beste individu:")
-print_rooster(beste_individu)
+    print("\nNieuw rooster voor het beste individu:")
+    print_rooster(beste_individu)
+
+
+if __name__ == "__main__":
+    main()
+
