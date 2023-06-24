@@ -11,12 +11,21 @@ werknemers = {
     "Niek": {"aantal_dagen": 3, "beschikbare_dagen": [1, 2, 6]}
 }
 
+gewenst_personeel = {
+            1: 2,
+            2: 2,
+            3: 3,
+            4: 3,
+            5: 4,
+            6: 4,
+            7: 3
+        }
 dagen_in_week = 7
 min_personeel = 2
 max_personeel = 4
 
 populatie_grootte = 100
-aantal_generaties = 1000
+aantal_generaties = 10
 selectie_percentage = 0.5
 kruising_kans = 0.8
 mutatiekans = 0.001
@@ -56,17 +65,15 @@ def bereken_fitness(individu):
             if dag in individu[werknemer]:
                 personeel_beschikbaar += 1
 
-        gewenst_personeel = {
-            1: 2,
-            2: 2,
-            3: 3,
-            4: 3,
-            5: 4,
-            6: 4,
-            7: 3
-        }
+        verschil = personeel_beschikbaar - gewenst_personeel[dag]
 
-        kosten += abs(personeel_beschikbaar - gewenst_personeel[dag])
+        if verschil < 0:
+            kosten += abs(verschil)  # Verhoog de kosten als er te weinig personeel is
+        elif verschil > 0 and dag not in individu[werknemer]:
+            kosten += verschil  # Verhoog de kosten als werknemers werken op niet-beschikbare dagen
+
+    if kosten == 0:
+        return 1e-10  # Retourneer een kleine waarde in plaats van nul om deling door nul te voorkomen
 
     return 1 / kosten
 
@@ -101,23 +108,69 @@ def kruising(vader, moeder):
     return kind1, kind2
 
 
-
 def mutatie(individu, mutatiekans):
-    gemuteerd_individu = {}
-    for werknemer, dagen in individu.items():
-        dagen_list = []
-        for dag in dagen:
-            if mutatiekans > random.random():
-                dagen_beschikbaar = [dag_beschikbaar for dag_beschikbaar in werknemers[werknemer]["beschikbare_dagen"]
-                                     if dag_beschikbaar not in dagen]
-                if dagen_beschikbaar:
-                    dagen_list.append(random.choice(dagen_beschikbaar))
-            else:
-                dagen_list.append(dag)
-        gemuteerd_individu[werknemer] = dagen_list
+    gemuteerd_individu = individu.copy()
+
+    # Zorg ervoor dat elke werknemer minimaal één dag werkt
+    for werknemer in gemuteerd_individu:
+        dagen = gemuteerd_individu[werknemer]
+        if len(dagen) == 0:
+            beschikbare_dagen = werknemers[werknemer]["beschikbare_dagen"]
+            willekeurige_dag = random.choice(beschikbare_dagen)
+            dagen.append(willekeurige_dag)
+
+    # Zorg ervoor dat het aantal werknemers op een dag overeenkomt met het gewenste aantal werknemers
+    for dag in range(1, dagen_in_week + 1):
+        werknemers_aanwezig = sum(1 for werknemer in gemuteerd_individu if dag in gemuteerd_individu[werknemer])
+
+        if werknemers_aanwezig < gewenst_personeel[dag]:
+            beschikbare_werknemers = [werknemer for werknemer in gemuteerd_individu if dag not in gemuteerd_individu[werknemer]]
+            if beschikbare_werknemers:
+                random.shuffle(beschikbare_werknemers)
+                aantal_toevoegen = gewenst_personeel[dag] - werknemers_aanwezig
+                for i in range(aantal_toevoegen):
+                    werknemer_toevoegen = beschikbare_werknemers[i]
+                    gemuteerd_individu[werknemer_toevoegen].append(dag)
+        elif werknemers_aanwezig > gewenst_personeel[dag]:
+            aanwezige_werknemers = [werknemer for werknemer in gemuteerd_individu if dag in gemuteerd_individu[werknemer]]
+            random.shuffle(aanwezige_werknemers)
+            aantal_verwijderen = werknemers_aanwezig - gewenst_personeel[dag]
+            for i in range(aantal_verwijderen):
+                werknemer_verwijderen = aanwezige_werknemers[i]
+                gemuteerd_individu[werknemer_verwijderen].remove(dag)
+
+    # Sorteer de werknemers op basis van het aantal gewerkte dagen in oplopende volgorde
+    werknemers_sorted = sorted(gemuteerd_individu.keys(), key=lambda x: len(gemuteerd_individu[x]))
+
+    # Herverdeel de beschikbare dagen aan werknemers die minder werken
+    for dag in range(1, dagen_in_week + 1):
+        werknemers_aanwezig = sum(1 for werknemer in gemuteerd_individu if dag in gemuteerd_individu[werknemer])
+
+        if werknemers_aanwezig < gewenst_personeel[dag]:
+            beschikbare_werknemers = [werknemer for werknemer in gemuteerd_individu if dag not in gemuteerd_individu[werknemer]]
+            if beschikbare_werknemers:
+                random.shuffle(beschikbare_werknemers)
+                aantal_toevoegen = gewenst_personeel[dag] - werknemers_aanwezig
+                for i in range(aantal_toevoegen):
+                    werknemer_toevoegen = beschikbare_werknemers[i]
+                    gemuteerd_individu[werknemer_toevoegen].append(dag)
+        elif werknemers_aanwezig > gewenst_personeel[dag]:
+            aanwezige_werknemers = [werknemer for werknemer in gemuteerd_individu if dag in gemuteerd_individu[werknemer]]
+            random.shuffle(aanwezige_werknemers)
+            aantal_verwijderen = werknemers_aanwezig - gewenst_personeel[dag]
+            for i in range(aantal_verwijderen):
+                werknemer_verwijderen = aanwezige_werknemers[i]
+                gemuteerd_individu[werknemer_verwijderen].remove(dag)
+
+    # Zorg ervoor dat elke werknemer minimaal één dag werkt na de herverdeling
+    for werknemer in gemuteerd_individu:
+        dagen = gemuteerd_individu[werknemer]
+        if len(dagen) == 0:
+            beschikbare_dagen = werknemers[werknemer]["beschikbare_dagen"]
+            willekeurige_dag = random.choice(beschikbare_dagen)
+            dagen.append(willekeurige_dag)
+
     return gemuteerd_individu
-
-
 
 populatie = maak_populatie(populatie_grootte)
 
