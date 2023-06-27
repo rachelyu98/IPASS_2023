@@ -1,0 +1,68 @@
+{
+  "Sanne": {
+    "aantal_dagen": 2,
+    "beschikbare_dagen": [
+      1,
+      6
+    ]
+  },
+  "Noah": {
+    "aantal_dagen": 4,
+    "beschikbare_dagen": [
+      6,
+      7,
+      2,
+      4
+    ]
+  },
+  "Sacha": {
+    "aantal_dagen": 4,
+    "beschikbare_dagen": [
+      5,
+      7,
+      2,
+      1
+    ]
+  },
+  "Brian": {
+    "aantal_dagen": 4,
+    "beschikbare_dagen": [
+      2,
+      3,
+      6,
+      1
+    ]
+  },
+  "Charissa": {
+    "aantal_dagen": 2,
+    "beschikbare_dagen": [
+      1,
+      2
+    ]
+  },
+  "Joris": {
+    "aantal_dagen": 4,
+    "beschikbare_dagen": [
+      3,
+      5,
+      6,
+      7
+    ]
+  },
+  "Kyra": {
+    "aantal_dagen": 3,
+    "beschikbare_dagen": [
+      1,
+      5,
+      7
+    ]
+  },
+  "Niek": {
+    "aantal_dagen": 3,
+    "beschikbare_dagen": [
+      1,
+      2,
+      6
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 import random
 import json
-from tabulate import tabulate
+
+
 
 #Gegevens lezen uit gegevens_werknemer.json
 with open('gegevens_werknemer.json', 'r') as json_bestand:
@@ -9,16 +10,6 @@ with open('gegevens_werknemer.json', 'r') as json_bestand:
 # Stap 2: Decodeer de JSON-gegevens naar een Python-dictionary
 werknemers = json.loads(inhoud)
 
-# Een dictionary met key: dagen van de week, en value: aantal werknemers nodig op die dag
-gewenst_personeel = {
-    1: 2,
-    2: 2,
-    3: 3,
-    4: 3,
-    5: 4,
-    6: 4,
-    7: 3
-}
 
 dagen_in_week = 7
 
@@ -29,9 +20,12 @@ kruising_kans = 0.8
 mutatiekans = 0.001
 
 
-def maak_individu():
+def maak_individu(gewenst_personeel):
     """
     Maakt een individu (rooster) met willekeurige toewijzing van dagen aan werknemers.
+
+    Paramaters:
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
 
     Returns:
         dict: Het gemaakte individu (rooster) waarbij de werknemers zijn gekoppeld aan de toegewezen dagen.
@@ -61,31 +55,34 @@ def maak_individu():
                     individu[werknemer].append(dag)
 
     return individu
-def maak_populatie(populatie_grootte):
+
+
+def maak_populatie(populatie_grootte, gewenst_personeel):
     """
     Maakt een populatie van individuen met de opgegeven grootte.
 
     Parameters:
         populatie_grootte (int): Het gewenste aantal individuen in de populatie.
-
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
     Returns:
         list: De gemaakte populatie van individuen (roosters).
     """
     populatie = []
     # Genereer het opgegeven aantal individuen en voeg ze toe aan de populatie
     for _ in range(populatie_grootte):  #exacte waarde is niet van belang, het wordt niet verder gebruikt.
-        individu = maak_individu()
+        individu = maak_individu(gewenst_personeel)
         populatie.append(individu)
     return populatie
 
 
 
-def bereken_fitness(individu):
+def bereken_fitness(individu, gewenst_personeel):
     """
     Berekent de fitnesswaarde van een individu (rooster).
 
     parameters:
         individu (dict): Het individu (rooster) waarvan de fitnesswaarde wordt berekend.
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
 
     Returns:
         float: De berekende fitnesswaarde van het individu.
@@ -112,12 +109,13 @@ def bereken_fitness(individu):
     return 1 / overtreding
 
 
-def totaal_fitness(populatie):
+def totaal_fitness(populatie, gewenst_personeel):
     """
     Berekent de totale fitnesswaarde van een populatie.
 
     Parameters:
         populatie (list): De populatie van individuen waarvan de totale fitnesswaarde wordt berekend.
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
 
     Returns:
         float: De berekende totale fitnesswaarde van de populatie.
@@ -126,17 +124,18 @@ def totaal_fitness(populatie):
     # Loop door elk individu in de populatie
     for individu in populatie:
         # Bereken de totale fitnesswaarde
-        totaal_fitness += bereken_fitness(individu)
+        totaal_fitness += bereken_fitness(individu, gewenst_personeel)
     return totaal_fitness
 
 
-def selecteer_individuen(populatie, aantal_te_selecteren):
+def selecteer_individuen(populatie, aantal_te_selecteren, gewenst_personeel):
     """
     Selecteert individuen uit een populatie op basis van hun fitnesswaarden.
 
     Paramaters:
         populatie (list): De populatie van individuen waaruit geselecteerd wordt.
         aantal_te_selecteren (int): Het aantal individuen dat geselecteerd moet worden.
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
 
     Returns:
         list: Een lijst van geselecteerde individuen.
@@ -144,7 +143,7 @@ def selecteer_individuen(populatie, aantal_te_selecteren):
     Raises:
         ValueError: Als het aantal te selecteren individuen groter is dan de populatiegrootte.
     """
-    fitness_scores = [bereken_fitness(individu) for individu in populatie]
+    fitness_scores = [bereken_fitness(individu, gewenst_personeel) for individu in populatie]
     # Gebruik de fitnesswaarden als gewichten om individuen te selecteren
     geselecteerde_individuen = random.choices(populatie, weights=fitness_scores, k=aantal_te_selecteren)
     return geselecteerde_individuen
@@ -181,13 +180,15 @@ def kruising(vader, moeder):
     return kind1, kind2
 
 
-def mutatie(individu, mutatiekans):
+def mutatie(individu, mutatiekans, gewenst_personeel):
     """
     Voert mutatie uit op een individu met een gegeven mutatiekans.
 
     Parameters:
         individu (dict): Het individu om te muteren.
         mutatiekans (float): De kans op mutatie per werknemer.
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
+
 
     Returns:
         dict: Het gemuteerde individu.
@@ -272,7 +273,7 @@ def mutatie(individu, mutatiekans):
     return gemuteerd_individu
 
 
-def genetisch_algoritme():
+def genetisch_algoritme(gewenst_personeel):
     """
     Voert het genetisch algoritme uit om de generatie van het rooster te optimaliseren.
 
@@ -280,18 +281,21 @@ def genetisch_algoritme():
     waarbij selectie-, crossover- en mutatiebewerkingen worden toegepast om de fitness van de roosters
     te verbeteren.
 
+    Paramaters:
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
+
     Returns:
         dict: Het beste individu gevonden door het genetisch algoritme.
         float: De fitnesswaarde van het beste individu.
     """
 
     # Initialiseer de populatie
-    populatie = maak_populatie(populatie_grootte)
+    populatie = maak_populatie(populatie_grootte, gewenst_personeel)
 
     for generatie in range(aantal_generaties):
         # Selectie: Selecteer individuen uit de populatie op basis van fitnessscores
         aantal_te_selecteren = int(selectie_percentage * populatie_grootte)
-        geselecteerde_individuen = selecteer_individuen(populatie, aantal_te_selecteren)
+        geselecteerde_individuen = selecteer_individuen(populatie, aantal_te_selecteren, gewenst_personeel)
 
         nieuwe_populatie = []
         for i in range(0, len(geselecteerde_individuen), 2):
@@ -305,20 +309,20 @@ def genetisch_algoritme():
 
         for i in range(len(nieuwe_populatie)):
             # Mutatie: Pas mutatie toe op de nakomelingen
-            nieuwe_populatie[i] = mutatie(nieuwe_populatie[i], mutatiekans)
+            nieuwe_populatie[i] = mutatie(nieuwe_populatie[i], mutatiekans, gewenst_personeel)
 
         # Voeg toe aan de populatie
         populatie += nieuwe_populatie
 
         # Verminder de grootte van de populatie tot de gewenste populatiegrootte
-        fitness_scores = [bereken_fitness(individu) for individu in populatie]
+        fitness_scores = [bereken_fitness(individu, gewenst_personeel) for individu in populatie]
         populatie = [populatie[i] for i in sorted(range(len(fitness_scores)),
                                                   key=lambda k: fitness_scores[k],
                                                   reverse=True)[:populatie_grootte]]
 
     # Vind het beste individu in de uiteindelijke populatie
-    beste_individu = max(populatie, key=bereken_fitness)
-    beste_fitness = bereken_fitness(beste_individu)
+    beste_individu = max(populatie, key=lambda x: bereken_fitness(x, gewenst_personeel))
+    beste_fitness = bereken_fitness(beste_individu, gewenst_personeel)
 
     # Pas het aantal toegewezen werknemers aan om aan het gewenste aantal te voldoen
     aangepast_individu = pas_aantal_werknemers_aan(beste_individu, gewenst_personeel)
@@ -332,7 +336,7 @@ def pas_aantal_werknemers_aan(individu, gewenst_personeel):
 
     Parameters:
         individu (dict): Het individu (rooster) om aan te passen.
-        gewenst_personeel (dict): Het gewenste aantal werknemers per dag.
+        gewenst_personeel(dict): key= dag van de week, value= aantal gewenst personeel op die dag
 
     Returns:
         dict: Het aangepaste individu met het juiste aantal werknemers per dag.
@@ -380,6 +384,7 @@ def maak_rooster(individu):
     # Een lege lijst om de dagroosters op te slaan
     rooster = []
 
+
     # Itereer over de dagnummers en dagnamen
     for dag_num, dag_naam in dagen.items():
         # Een lege lijst om de werknemers van de huidige dag op te slaan
@@ -395,32 +400,4 @@ def maak_rooster(individu):
         rooster.append(dag_rooster)
     return rooster
 
-def maak_rooster_text(rooster):
-    """
-    Converteert het gegeven rooster naar tekstformaat.
 
-    Parameters:
-        rooster (list): Het rooster om te converteren.
-
-    Returns:
-        str: Het rooster in tekstformaat met de dagnamen en de bijbehorende werknemers.
-    """
-    # Een lege string om het rooster in tekstformaat op te bouwen
-    rooster_text = ""
-    # Itereer over elk dagrooster in het gegeven rooster
-    for dag_rooster in rooster:
-        # Haal de dagnaam op uit het dagrooster
-        dag_naam = dag_rooster[0]
-        # Haal de werknemers op uit het dagrooster en zet ze om naar een komma-gescheiden string
-        werknemers = ", ".join(dag_rooster[1:])
-        # Maak een tekstuele representatie van het dagrooster met de dagnaam en de werknemers
-        dag_text = f"{dag_naam}: {werknemers}\n"
-        # Voeg het dagrooster toe aan de tekst van het volledige rooster
-        rooster_text += dag_text
-
-    return rooster_text
-
-
-beste_individu, beste_fitness = genetisch_algoritme()
-print(beste_individu)
-print(maak_rooster(beste_individu))
