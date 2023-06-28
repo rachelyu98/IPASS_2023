@@ -14,6 +14,26 @@ def place_logo(event):
     logo_y = (root.winfo_height() - logo_img.height) // 2
     logo_label.place(x=logo_x, y=logo_y)
 
+root = tk.Tk()
+root.geometry('1000x1000')
+root.title('Welkom bij Restaurant A1')
+
+# Achtergrondafbeelding
+background_img = Image.open('achtergrond.png')
+background_photo = ImageTk.PhotoImage(background_img)
+background_label = tk.Label(root, image=background_photo)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+# Logo-afbeelding
+logo_img = Image.open('logo.png')
+logo_photo = ImageTk.PhotoImage(logo_img)
+logo_label = tk.Label(root, image=logo_photo)
+
+# Tekst toevoegen
+label_text = Label(root, text='Welkom bij Restaurant A1', bg='orange', fg='white', font=('Arial', 50))
+label_text.place(relx=0.5, rely=0.3, anchor='center')
+
+root.bind("<Configure>", place_logo)  # Koppel de functie aan het "<Configure>"-event
 
 def new_window():
     """Opent een nieuw venster voor het invoeren van medewerkers per dag"""
@@ -42,9 +62,44 @@ def new_window():
     opslaan_button = Button(root2, text='Opslaan', command=partial(opslaan, dagen, entries))
     opslaan_button.place(relx=0.5, rely=0.9, anchor='center')
 
+    def rooster_window():
+        """Toont het rooster in een nieuw venster"""
+        beste_individu, beste_fitness = genetisch_algoritme(opslaan(dagen, entries))
+
+        root2.withdraw()  # Verberg het huidige venster
+        root3 = tk.Toplevel()  # Maak een nieuw venster
+        root3.geometry('1000x1000')  # Formaat instellen voordat mainloop() wordt aangeroepen
+        root3.title('rooster A1')
+
+        # Maak een Treeview widget
+        tree = ttk.Treeview(root3)
+
+        # Definieer de kolommen van de tabel
+        tree["columns"] = ("day", "employees")
+
+        # Opmaak van de kolommen
+        tree.column("#0", width=0, stretch=tk.NO)  # Verberg de eerste kolom
+        tree.column("day", width=300)
+        tree.column("employees", width=500, stretch=tk.YES)
+
+        # Koppen van de kolommen
+        tree.heading("#0", text="", anchor=tk.W)
+        tree.heading("day", text="Dag", anchor=tk.W)
+        tree.heading("employees", text="Medewerkers", anchor=tk.W)
+
+        # Voeg data toe aan de tabel
+        for i, row in enumerate(maak_rooster(beste_individu), start=1):
+            day = row[0]
+            employees = ", ".join(row[1:])
+            tree.insert(parent="", index="end", iid=i, text="", values=(day, employees))
+
+        # Plaats de Treeview widget
+        tree.pack()
+
+        root3.mainloop()
+
     show_rooster = Button(root2, text='Show rooster', command=rooster_window)
     show_rooster.place(relx=0.7, rely=0.9, anchor='center')
-
 
 def opslaan(dagen, entries):
     """Haalt het aantal medewerkers per dag op uit de invoervelden"""
@@ -56,66 +111,7 @@ def opslaan(dagen, entries):
             if value == '' or value is None:
                 value = 0
             medewerkers_per_dag[i] = int(value)
-    print(medewerkers_per_dag)
     return medewerkers_per_dag
-
-
-def rooster_window(beste_individu, dagen):
-    """Toont het rooster in een nieuw venster"""
-    root.withdraw()  # Verberg het huidige venster
-    root3 = tk.Toplevel()  # Maak een nieuw venster
-    root3.geometry('1000x1000')  # Formaat instellen voordat mainloop() wordt aangeroepen
-    root3.title('rooster A1')
-
-    # Maak een Treeview-widget
-    tree = ttk.Treeview(root3)
-
-    # Definieer de kolommen van de tabel
-    tree["columns"] = ("day", "employees")
-
-    # Opmaak van de kolommen
-    tree.column("#0", width=0, stretch=tk.NO)  # Verberg de eerste kolom
-    tree.column("day", width=300)
-    tree.column("employees", width=500, stretch=tk.YES)
-
-    # Koppen van de kolommen
-    tree.heading("#0", text="", anchor=tk.W)
-    tree.heading("day", text="Dag", anchor=tk.W)
-    tree.heading("employees", text="Medewerkers", anchor=tk.W)
-
-    # Voeg data toe aan de tabel
-    for i, row in enumerate(maak_rooster(beste_individu), start=1):
-        day = row[0]
-        employees = ", ".join(row[1:])
-        tree.insert(parent="", index="end", iid=i, text="", values=(day, employees))
-
-    # Plaats de Treeview-widget
-    tree.pack()
-
-    root3.mainloop()
-
-
-root = tk.Tk()
-root.geometry('1000x1000')
-root.title('Welkom bij Restaurant A1')
-
-# Achtergrondafbeelding
-background_img = Image.open('achtergrond.png')
-background_photo = ImageTk.PhotoImage(background_img)
-background_label = tk.Label(root, image=background_photo)
-background_label.place(x=0, y=0, relwidth=1, relheight=1)
-
-# Logo-afbeelding
-logo_img = Image.open('logo.png')
-logo_photo = ImageTk.PhotoImage(logo_img)
-logo_label = tk.Label(root, image=logo_photo)
-
-# Tekst toevoegen
-label_text = Label(root, text='Welkom bij Restaurant A1', bg='orange', fg='white', font=('Arial', 50))
-label_text.place(relx=0.5, rely=0.3, anchor='center')
-
-root.bind("<Configure>", place_logo)  # Koppel de functie aan het "<Configure>"-event
-
 rooster_knop = Button(root, command=new_window, text='Naar rooster', fg='deep sky blue')
 rooster_knop.place(relx=0.5, rely=0.7, anchor='center')
 
