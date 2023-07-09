@@ -13,11 +13,12 @@ werknemers = json.loads(inhoud)
 
 dagen_in_week = 7
 
+#genetisch parameters
 populatie_grootte = 100
-aantal_generaties = 1000
+aantal_generaties = 30
 selectie_percentage = 0.5
-kruising_kans = 0.8
-mutatiekans = 0.001
+kruising_kans = 0.6
+mutatiekans = 0.0001
 
 
 def maak_individu(gewenst_personeel):
@@ -55,6 +56,7 @@ def maak_individu(gewenst_personeel):
                     individu[werknemer].append(dag)
 
     return individu
+
 
 
 def maak_populatie(populatie_grootte, gewenst_personeel):
@@ -126,6 +128,7 @@ def totaal_fitness(populatie, gewenst_personeel):
         # Bereken de totale fitnesswaarde
         totaal_fitness += bereken_fitness(individu, gewenst_personeel)
     return totaal_fitness
+
 
 
 def selecteer_individuen(populatie, aantal_te_selecteren, gewenst_personeel):
@@ -329,6 +332,7 @@ def genetisch_algoritme(gewenst_personeel):
 
     # Retourneer het beste individu en zijn fitness
     return aangepast_individu, beste_fitness
+
 
 def pas_aantal_werknemers_aan(individu, gewenst_personeel):
     """
